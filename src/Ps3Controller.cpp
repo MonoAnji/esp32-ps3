@@ -2,45 +2,45 @@
 
 #include <esp_bt_main.h>
 #include <esp_bt_defs.h>
+#include <esp_log.h>
+#include <cstring>
 
 extern "C" {
 #include  "esp_bt_device.h"
 #include  "include/ps3.h"
 }
 
+#define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
 
 #define ESP_BD_ADDR_HEX_STR        "%hhx:%hhx:%hhx:%hhx:%hhx:%hhx"
 #define ESP_BD_ADDR_HEX_ARR(addr)   addr[0],  addr[1],  addr[2],  addr[3],  addr[4],  addr[5]
 #define ESP_BD_ADDR_HEX_PTR(addr)  &addr[0], &addr[1], &addr[2], &addr[3], &addr[4], &addr[5]
 
 
-Ps3Controller::Ps3Controller()
+Ps3Controller::Ps3Controller() = default;
+
+
+long map(long x, long in_min, long in_max, long out_min, long out_max)
 {
-
+    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
-
 
 bool Ps3Controller::begin()
 {
     ps3SetEventObjectCallback(this, &Ps3Controller::_event_callback);
     ps3SetConnectionObjectCallback(this, &Ps3Controller::_connection_callback);
 
-    if(!btStarted() && !btStart()){
-        log_e("btStart failed");
-        return false;
-    }
-
     esp_bluedroid_status_t bt_state = esp_bluedroid_get_status();
     if(bt_state == ESP_BLUEDROID_STATUS_UNINITIALIZED){
         if (esp_bluedroid_init()) {
-            log_e("esp_bluedroid_init failed");
+            ESP_LOGE("DS3", "esp_bluedroid_init failed");
             return false;
         }
     }
 
     if(bt_state != ESP_BLUEDROID_STATUS_ENABLED){
         if (esp_bluedroid_enable()) {
-            log_e("esp_bluedroid_enable failed");
+            ESP_LOGE("DS3", "esp_bluedroid_enable failed");
             return false;
         }
     }
@@ -56,7 +56,7 @@ bool Ps3Controller::begin(const char *mac)
     esp_bd_addr_t addr;
 
     if (sscanf(mac, ESP_BD_ADDR_HEX_STR, ESP_BD_ADDR_HEX_PTR(addr)) != ESP_BD_ADDR_LEN){
-        log_e("Could not convert %s\n to a MAC address", mac);
+        ESP_LOGE("DS3", "Could not convert %s\n to a MAC address", mac);
         return false;
     }
 
@@ -74,17 +74,17 @@ bool Ps3Controller::end()
 }
 
 
-String Ps3Controller::getAddress() {
-    String address = "";
+std::string Ps3Controller::getAddress() {
+    std::string address = "";
 
-    if (btStarted()) {
+    //if (btStarted()) {
         char mac[18];
         const uint8_t* addr = esp_bt_dev_get_address();
 
         sprintf(mac, ESP_BD_ADDR_STR, ESP_BD_ADDR_HEX_ARR(addr));
 
-        address = String(mac);
-    }
+        address = std::string(mac);
+    //}
 
     return address;
 }

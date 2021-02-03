@@ -1,9 +1,8 @@
 #ifndef Ps3Controller_h
 #define Ps3Controller_h
 
-#include <inttypes.h>
-
-#include "Arduino.h"
+#include <cinttypes>
+#include <string>
 
 extern "C" {
 #include  "include/ps3.h"
@@ -15,8 +14,8 @@ class Ps3Controller
     public:
         typedef void(*callback_t)();
 
-        ps3_t data;
-        ps3_event_t event;
+        ps3_t data{};
+        ps3_event_t event{};
 
         Ps3Controller();
 
@@ -24,7 +23,7 @@ class Ps3Controller
         bool begin(const char *mac);
         bool end();
 
-        String getAddress();
+        std::string getAddress();
 
         bool isConnected();
 
@@ -39,7 +38,7 @@ class Ps3Controller
         static void _event_callback(void *object, ps3_t data, ps3_event_t event);
         static void _connection_callback(void *object, uint8_t is_connected);
 
-        int player;
+        int player{};
 
         callback_t _callback_event = nullptr;
         callback_t _callback_connect = nullptr;
